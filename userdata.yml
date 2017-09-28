@@ -1,0 +1,38 @@
+#cloud-config
+
+coreos:
+  update:
+    reboot-strategy: "reboot"
+  locksmith:
+    window-start: 04:00
+    window-length: 1h
+  units:
+    - name: "docker.service"
+      command: start
+    - name: systemd-sysctl.service
+      command: restart
+    - name: create-swap.service
+      command: start
+      runtime: true
+    - name: swap.service
+      command: start
+      content: |
+        [Unit]
+        Description=Turn on swap
+
+        [Service]
+        Type=oneshot
+        RemainAfterExit=true
+        ExecStartPre=/usr/bin/sh -c "/usr/bin/fallocate -l 2g /swapfile2G && chmod 600 /swapfile2G && /usr/sbin/mkswap /swapfile2G"
+        ExecStart=/usr/bin/sh -c "/sbin/swapon /swapfile2G"
+        ExecStop=/usr/bin/sh -c "/sbin/swapoff /swapfile2G"
+
+        [Install]
+        WantedBy=multi-user.target
+write_files:
+  - path: /etc/sysctl.d/swap.conf
+    permissions: 0644
+    owner: root
+    content: |
+      vm.swappiness=10
+      vm.vfs_cache_pressure=50
