@@ -11,9 +11,6 @@ coreos:
       command: start
     - name: systemd-sysctl.service
       command: restart
-    - name: create-swap.service
-      command: start
-      runtime: true
     - name: swap.service
       command: start
       content: |
